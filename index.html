@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Mini Me</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div id="stage">
+
+    <!-- Focus / Break progress pill, shown above the pet during a session -->
+    <div id="focus-bar" class="chip hidden">
+      <div class="focus-bar-track">
+        <div id="focus-bar-fill"></div>
+      </div>
+      <div id="focus-bar-label">25:00</div>
+    </div>
+
+    <!-- Speech bubble -->
+    <div id="bubble" class="chip hidden">
+      <span id="bubble-text"></span>
+    </div>
+
+    <!-- The pet itself -->
+    <img id="pet" src="assets/idle.png" draggable="false" alt="Mini Me" />
+
+    <!-- Layer for floating hearts / zzz particles -->
+    <div id="fx-layer"></div>
+
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

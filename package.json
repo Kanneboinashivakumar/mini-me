@@ -1,0 +1,35 @@
+{
+  "name": "mini-me",
+  "version": "1.0.0",
+  "description": "A floating desktop companion — your Mini Me study buddy.",
+  "main": "main.js",
+  "author": "You",
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.minime.desktoppet",
+    "productName": "Mini Me",
+    "files": [
+      "**/*",
+      "!dist/**"
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

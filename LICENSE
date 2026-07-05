@@ -1,0 +1,28 @@
+Mini Me — License & Usage Guidelines
+
+Welcome! This repository reflects the personal journey, projects, and professional identity of Kanneboinashivakumar.
+
+You are fully welcome to clone, copy, learn from, and adapt this repository! It is public and free to use. Please read the following guidelines regarding copying, adapting, and attributing this work.
+
+📄 Usage & Guidelines
+
+💡 Free Use & Adaptation
+You are warmly encouraged to:
+- Clone, run, and use this desktop pet companion for your own personal or educational projects.
+- Explore the codebase, custom assets, animations, and layouts to learn how they work.
+- Adapt the underlying HTML, CSS, JavaScript state-machine, and Electron packaging structures to build your own unique design.
+- Reference the techniques used (such as the custom click-based double-click detection, transparent window logic, or gravity animation calculations) in your own projects.
+
+🤝 Attribution Guidelines
+If you use code, design concepts, or specific animations from this repository, please provide a short, polite credit link back to my profile:
+
+Inspired by [Kanneboinashivakumar](https://github.com/Kanneboinashivakumar)
+
+You can place this credit at the bottom of your own README or in a dedicated comment inside your files.
+
+⭐ Voluntary Support (Highly Recommended!)
+If this project, its custom companion designs, or animations inspired you or helped you learn, please consider giving this repository a stargazer star (⭐)! It is highly appreciated and helps support my open-source work.
+
+Note: In the spirit of open-source freedom, cloning, starring, or following are completely voluntary. A GitHub star cannot be legally required or enforced as a condition for cloning, copying, or learning from this repository.
+
+Thank you for your respect, support, and for keeping the open-source community creative and collaborative!
