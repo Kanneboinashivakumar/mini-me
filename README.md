@@ -1,13 +1,19 @@
 # Mini Me 🎀
 
-A premium, cute, and highly interactive animated desktop companion built on Electron. Mini Me lives on your screen, wanders along your taskbar, keeps you company while you work, and helps you stay mindful and productive with built-in Focus and Break sessions.
+A premium, cozy, and highly interactive animated desktop companion built on Electron. Mini Me lives on your screen, wanders along your taskbar, keeps you company while you work, and helps you stay mindful and productive with built-in Focus and Break sessions.
 
 ---
 
 <p align="center">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS-blue?style=for-the-badge&logo=electron" alt="Platform Compatibility" />
   <img src="https://img.shields.io/badge/built%20with-Electron-47848F?style=for-the-badge&logo=electron" alt="Built With Electron" />
-  <img src="https://img.shields.io/badge/license-Custom-orange?style=for-the-badge" alt="License Custom" />
+  <img src="https://img.shields.io/badge/node.js->=18.0.0-339933?style=for-the-badge&logo=node.js" alt="Node.js Support" />
+  <img src="https://img.shields.io/badge/license-Custom-orange?style=for-the-badge" alt="License" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/last-commit/Kanneboinashivakumar/mini-me?style=flat-square" alt="GitHub last commit" />
+  <img src="https://img.shields.io/github/stars/Kanneboinashivakumar/mini-me?style=flat-square" alt="GitHub stars" />
 </p>
 
 ## 📸 Preview
@@ -18,6 +24,40 @@ A premium, cute, and highly interactive animated desktop companion built on Elec
   <br>
   <em>Mini Me sitting on your taskbar, ready to pair-program with you!</em>
 </p>
+
+---
+
+## 📖 Table of Contents
+
+1. [Philosophy](#-philosophy)
+2. [Features](#-features)
+3. [Controls & Interactions](#-controls--interactions)
+4. [State Machine & Pet Behaviors](#-state-machine--pet-behaviors)
+5. [Technical Architecture](#-technical-architecture)
+6. [Security Model](#-security-model)
+7. [Performance Philosophy](#-performance-philosophy)
+8. [Customization Guide](#-customization-guide)
+9. [Packaging & Distribution](#-packaging--distribution)
+10. [Troubleshooting](#-troubleshooting)
+11. [FAQ](#-faq)
+12. [Roadmap](#-roadmap)
+13. [Contributing](#-contributing)
+14. [Code Style Guidelines](#-code-style-guidelines)
+15. [License & Usage Guidelines](#-license--usage-guidelines)
+16. [Credits](#-credits)
+17. [About the Author](#-about-the-author)
+
+---
+
+## 🕯️ Philosophy
+
+In a digital workspace dominated by dense spreadsheets, continuous code compilation, and terminal interfaces, developers and creators are often isolated. **Mini Me** is born out of a desire to humanize the desktop environment. 
+
+Mini Me acts as a cozy productivity companion that bridges:
+- **Emotional Interaction**: A companion that gets lonely, sleeps, eats, and smiles back at you.
+- **Productivity & Focus**: Incorporating time-tested techniques (like Pomodoro timers) directly into the companion's visual state.
+- **Mindfulness**: Providing warm, cozy messages that remind you to relax your shoulders, take deep breaths, and stay hydrated.
+- **Playful Interactivity**: Supporting simple physics interactions like dragging, falling, and feeding cookies to break the monotony of the workday.
 
 ---
 
@@ -49,55 +89,62 @@ Interact with Mini Me to keep her happy and engaged:
 
 ---
 
-## 🧠 Desktop Pet Behaviors
+## 🧠 State Machine & Pet Behaviors
 
-Mini Me has a state-machine brain that governs her mood and sprites:
+Mini Me's actions are driven by a state-machine that updates in the rendering cycle. Here are the available states:
 
-### 🥺 The Crying (Lonely) State
-If you do not interact with Mini Me (no click, drag, or feeding) for **4 minutes** while she is walking:
-1. She stops walking and switches her sprite to `crying.png`.
-2. A speech bubble appears saying: `"...i missed you. click me? 🥺"`.
-3. She stays in this state for a few seconds before returning to her normal walking loop.
+```mermaid
+stateDiagram-v2
+    [*] --> GREETING
+    GREETING --> WALKING : Timeout (2.2s)
+    
+    state WALKING {
+        [*] --> WalkLoop
+        WalkLoop --> WalkLoop : Toggle Walk Sprites (260ms)
+    }
 
-### 🎉 The Laughing State (Focus Session Completion)
-When you start a Focus Session (default **25 minutes**), she sits at her desk (`focus.png`) with a timer. When the countdown reaches `00:00`:
-1. She jumps with joy and switches to `laughing.png`.
-2. Floating hearts (`💗💕💖`) spawn above her head.
-3. She congratulates you with a bubble: `"focus session complete! amazing work 🎉"`.
-4. She automatically packs up and returns to walking.
+    WALKING --> IDLE : Timer / Inactivity
+    WALKING --> SLEEP : Idle Timer (3m)
+    WALKING --> DRAGGING : Mousedown + Drag
+    WALKING --> LONELY : Inactivity Timer (4m)
+    
+    DRAGGING --> FALLING : Mouseup
+    FALLING --> REACTING : Hit Floor (Bounces)
+    REACTING --> WALKING : Timeout (0.7s)
 
-### 🍪 The Feeding Mechanic
-When you double-click her:
-1. A treat element (`treat.png`) is instantiated above her head (`top: -40px`).
-2. The treat falls down to her hands/mouth using `requestAnimationFrame` with a gravity-accelerating ease (`t * t`) over `650ms`.
-3. The treat is consumed and she reacts with `reacting.png` and hearts.
-4. She shifts into eating mode (`eating.png`) with a thank-you note before going back to her previous state.
+    WALKING --> FOCUS : Right-Click Menu
+    state FOCUS {
+        [*] --> DeskSit : Sprites focus.png
+        DeskSit --> Laugh : Focus Timer Complete (00:00)
+    }
+    Laugh --> WALKING : Hearts + Timeout (1.5s)
+    
+    WALKING --> BREAK : Right-Click Menu
+    BREAK --> WALKING : Break Timer Complete (5m)
+
+    WALKING --> REACTING : Double-Click (Feed)
+    REACTING --> EATING : Catch Cookie (400ms)
+    EATING --> WALKING : Eat cookie + restore (1.8s)
+    
+    LONELY --> WALKING : Click / Timeout (3.2s)
+    SLEEP --> WALKING : Wake Up Timer (1m)
+```
+
+- **Walking**: Alternates walk-1 and walk-2 sprites, moving horizontally along the floor.
+- **Sleeping**: Renders sleeping sprite, spawning floating "Zzz" particles; wakes up automatically.
+- **Focus**: Triggered via native context menu; sits quietly at a study desk while counting down your pomodoro block.
+- **Break**: Walk speed is maintained while displaying cozy break messages.
+- **Eating**: Consumes a treat and displays hearts after a cookie is caught.
+- **Crying**: Swings into crying animation, displaying a lonely bubble message.
+- **Laughing**: Celebratory completed-focus state that spawns hearts.
+- **Dragging**: Follows your cursor with custom grab cursor and drag sprite.
+- **Falling**: Falling under simulated gravity ($2200\text{ px/s}^2$) with a bounce on landing.
 
 ---
 
-## 🛠️ Installation & Setup
+## 🏗️ Technical Architecture
 
-### Requirements
-- [Node.js](https://nodejs.org) (LTS recommended)
-- Windows or macOS
-
-### Running Locally
-1. Clone or download the repository to your machine.
-2. Open your terminal in the project directory.
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-4. Start the application:
-   ```bash
-   npm start
-   ```
-
----
-
-## 🏗️ Architecture & How It Works
-
-Instead of rendering a giant, transparent window covering your whole monitor (which breaks click-through hit-testing and slows down your PC), Mini Me runs in a **small, frameless, transparent OS window** (240x270 px) that stays on top.
+Instead of rendering a giant, transparent window covering your whole monitor (which breaks click-through hit-testing and slows down your PC), Mini Me runs in a **small, frameless, transparent OS window** (240x270 px) that stays always-on-top.
 
 ```mermaid
 graph TD
@@ -114,9 +161,34 @@ graph TD
 
 ---
 
-## ⚙️ Development & Customization
+## 🔒 Security Model
 
-You can fully customize Mini Me's settings inside `renderer.js` in the `CONFIG` object:
+Security is critical when deploying desktop apps. Electron applications running locally have access to node capabilities that could be exploited if malicious scripts are injected.
+
+To mitigate this, Mini Me implements a **strict security separation**:
+1. **Context Isolation (`contextIsolation: true`)**: The JavaScript execution context of the renderer is separated from the preload script. This prevents the renderer from tampering with internal Electron APIs.
+2. **Disabled Node Integration (`nodeIntegration: false`)**: The renderer page runs like a sandboxed webpage and cannot call `require('fs')` or other raw Node modules directly.
+3. **Preload Context Bridge**: Only explicit, safe, and parameter-validated methods are exposed to the renderer under `window.petAPI` (e.g. `moveWindow(x,y)`). The renderer can never call `ipcRenderer.send()` with arbitrary events.
+
+---
+
+## ⚡ Performance Philosophy
+
+Most desktop pets use a full-screen transparent canvas overlays. However, this creates several performance issues:
+- Continuous rendering of a giant transparent screen consumes massive GPU memory.
+- In Windows and macOS, full-screen transparent windows intercept clicks intended for background apps unless complex, unstable mouse-forwarding APIs are queried.
+- System resources are wasted rendering blank pixels.
+
+**Mini Me's approach**: Keep the window bounds small (240x270 px) and move the window itself.
+- High performance: Rendering a small window takes minimal CPU and GPU cycles.
+- OS Native: Uses OS-level window movement APIs which are extremely fast and hardware-accelerated.
+- True Click-Through: Background windows are naturally clickable because there is no transparent window covering them!
+
+---
+
+## ⚙️ Customization Guide
+
+All variables that govern Mini Me live at the top of [renderer.js](file:///c:/coding/mini-me/renderer.js) in the `CONFIG` object:
 
 ```js
 const CONFIG = {
@@ -140,24 +212,71 @@ To modify her speech lines, edit the message arrays directly below the `CONFIG` 
 
 ---
 
-## 📦 Packaging for Distribution
+## 📦 Packaging & Distribution
 
-To build a standalone installer (`.dmg` on macOS, `.exe` on Windows) to share:
+To bundle Mini Me into a production installer:
 
-```bash
-npm run dist
-```
-The finished installers will be located in the generated `dist/` directory.
+1. **Install electron-builder**:
+   ```bash
+   npm run dist
+   ```
+2. **Build Outputs**:
+   - On Windows: A standalone NSIS installer will be generated in `dist/`.
+   - On macOS: A `.dmg` file will be compiled in `dist/`.
+
+Configuration settings (app icon, category, and file targets) are declared under the `build` parameter in `package.json`.
+
+---
+
+## 🛠️ Troubleshooting
+
+- **Black background instead of transparency**: This usually occurs if hardware acceleration is failing or if transparency options are overridden by GPU profiles. Run the app with:
+  ```bash
+  electron . --disable-gpu
+  ```
+- **Treat doesn't drop on double-click**: Ensure you are double-clicking directly on the companion's body image. If it still doesn't drop, check if she is currently dragging or falling (as feed interaction is paused in these states).
+- **She sits over an input area**: Simply left-click and drag her to another location along the taskbar.
+
+---
+
+## ❓ FAQ
+
+**Q: Can I replace the character artwork?**
+A: Yes! You can replace the image files in the `assets/` folder with your own designs. Keep the filenames same, and ensure your new images are square aspect ratio.
+
+**Q: Does she work on multi-monitor setups?**
+A: By default, Electron positions her on your primary display. You can customize the positioning logic in `main.js` using Electron's `screen.getAllDisplays()` API if you wish to run her on a secondary screen.
+
+**Q: Is there any data sent to servers?**
+A: No. Mini Me runs entirely locally on your machine. There is no telemetry, analytics, or external API calling.
+
+---
+
+## 🗺️ Roadmap
+
+We have a long list of features planned for future updates:
+- [ ] **Multiple Companion Skins** — Support choosing from a variety of pets and companions.
+- [ ] **Voice Packs** — Add optional cute sound effects for eating, sleeping, and completion notifications.
+- [ ] **Seasonal Outfits** — Automatically dress her up for Halloween, Christmas, or Summer holidays.
+- [ ] **Steam Integration** — Steam achievements and overlay options.
+- [ ] **Achievement System** — Unlock stars and titles for completing long coding sessions.
+- [ ] **Plugin API** — Allow developers to write custom scripts for custom behaviors.
+- [ ] **Cloud Sync** — Sync study times and settings across multiple devices.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these guidelines:
-1. Fork the repository.
-2. Create a new branch for your feature (`git checkout -b feature/amazing-feature`).
-3. Commit your changes with clear, professional messages.
-4. Push to the branch and open a Pull Request.
+We welcome community contributions! Please read our [CONTRIBUTING.md](file:///c:/coding/mini-me/CONTRIBUTING.md) to understand our development, coding, and submission policies.
+
+---
+
+## 📄 Code Style Guidelines
+
+- **Vanilla CSS**: Avoid CSS libraries or preprocessors; styling belongs in `styles.css`.
+- **Formatting**: Semicolons are required. Use 2-space indentation for all HTML, CSS, and JS files.
+- **Function Naming**: Use `camelCase` for functions and variables.
+- **Documentation**: Document public functions with clear inline explanations.
 
 ---
 
@@ -171,3 +290,14 @@ This project is licensed under custom terms. Please see the [LICENSE](file:///c:
 
 - Built with [Electron](https://www.electronjs.org/).
 - Character design, sprites, and animations by You.
+
+---
+
+## 👨‍💻 About the Author
+
+This repository is built, designed, and maintained by **Kanneboina Shiva Kumar**. 
+
+I am passionate about building cozy, mindful, and high-performance open-source tools. You can explore more of my work, get in touch, or follow my projects on:
+- **GitHub**: [@Kanneboinashivakumar](https://github.com/Kanneboinashivakumar)
+
+*If this project brings a small smile to your coding sessions, please consider giving it a star (⭐) on GitHub!*
